@@ -21,17 +21,12 @@ struct Person {
 // We will use this error type for the `FromStr` implementation.
 #[derive(Debug, PartialEq)]
 enum ParsePersonError {
-    // Empty input string
-    Empty,
-    // Incorrect number of fields
-    BadLen,
-    // Empty name field
-    NoName,
-    // Wrapped error from parse::<usize>()
-    ParseInt(ParseIntError),
+    Empty,  // Empty input string    
+    BadLen, // Incorrect length
+    NoName, // Empty name field
+    ParseInt(ParseIntError),   // Wrapped error from parse::<usize>()
 }
 
-// I AM NOT DONE
 
 // Steps:
 // 1. If the length of the provided string is 0, an error should be returned
@@ -49,9 +44,50 @@ enum ParsePersonError {
 // you want to return a string error message, you can do so via just using
 // return `Err("my error message".into())`.
 
+// impl fmt::Display for ParsePersonError {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         match self {
+//             ParsePersonError::Empty => write!(f, "Empty input string"),
+//             ParsePersonError::BadLen => write!(f, "Incorrect number of fields"),
+//             ParsePersonError::NoName => write!(f, "Empty name field"),
+//             ParsePersonError::ParseInt(_) => write!(f, "Error parsing integer"),
+//         }
+//     }
+// }
+
+// impl error::Error for ParsePersonError {}
+
 impl FromStr for Person {
-    type Err = ParsePersonError;
-    fn from_str(s: &str) -> Result<Person, Self::Err> {
+    type Err = ParsePersonError; // Changed from Box<dyn std::error::Error>
+    
+    fn from_str(s: &str) -> Result<Person, ParsePersonError> {
+        let parts: Vec<&str> = s.split(",").collect();
+        if s.is_empty() { return Err(ParsePersonError::Empty); }
+        if parts.len() != 2 {return Err(ParsePersonError::BadLen); }
+
+        let (name, age_str) = (parts[0].trim(), parts[1].trim());
+        if name.is_empty() { return Err(ParsePersonError::NoName); }
+
+        // match age_str.parse::<usize>() {
+        //     Ok(age) => Ok(Person {
+        //         name: name.to_string(),
+        //         age: age,
+        //     }),
+        //     Err(e) => Err(ParsePersonError::ParseInt(e)),
+        // }
+
+        // - 1 
+        let age = age_str.parse::<usize>().map_err(ParsePersonError::ParseInt)?;
+
+        // Error ! expected `usize`, found `Result<_, ParsePersonError>`
+        // let age = age_str.parse::<usize>().unwrap_or_else(|e| {
+        //     return Err(ParsePersonError::ParseInt(e));
+        // });
+
+        Ok(Person {
+            name: name.to_string(),
+            age,
+        })
     }
 }
 

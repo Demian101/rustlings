@@ -9,30 +9,32 @@
 // Execute `rustlings hint errors6` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
 
 use std::num::ParseIntError;
 
 // This is a custom error type that we will be using in `parse_pos_nonzero()`.
 #[derive(PartialEq, Debug)]
 enum ParsePosNonzeroError {
-    Creation(CreationError),
-    ParseInt(ParseIntError),
+    Creation(CreationError), // handle illegal input like 0, -99, -1 ..
+    ParseInt(ParseIntError), // handle illegal input like "buzz buzz" 
 }
 
-impl ParsePosNonzeroError {
-    fn from_creation(err: CreationError) -> ParsePosNonzeroError {
+impl From<CreationError> for ParsePosNonzeroError {
+    fn from(err: CreationError) -> ParsePosNonzeroError {
         ParsePosNonzeroError::Creation(err)
     }
-    // TODO: add another error conversion function here.
-    // fn from_parseint...
+}
+
+impl From<ParseIntError> for ParsePosNonzeroError {
+    fn from(err: ParseIntError) -> ParsePosNonzeroError {
+        ParsePosNonzeroError::ParseInt(err)
+    }
 }
 
 fn parse_pos_nonzero(s: &str) -> Result<PositiveNonzeroInteger, ParsePosNonzeroError> {
-    // TODO: change this to return an appropriate error instead of panicking
-    // when `parse()` returns an error.
-    let x: i64 = s.parse().unwrap();
-    PositiveNonzeroInteger::new(x).map_err(ParsePosNonzeroError::from_creation)
+    // let x: i64 = s.parse()?;
+    let x: i64 = s.parse().map_err(ParsePosNonzeroError::from)?;
+    PositiveNonzeroInteger::new(x).map_err(ParsePosNonzeroError::from)
 }
 
 // Don't change anything below this line.
